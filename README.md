@@ -7,14 +7,15 @@ The purpose of this project was to remove the reliance of contracting the data c
 * Project Structure*
 * 
 	- Open the *Tier1_D7.Rproj*
-	- 
 	- Open up the *00 – Prologue.R* script and run 
-	- 
 	- The program will prompt the end user to input their oracle user name and password in order to query the appropriate data sets
-	- 
 	- All intermediate tables and final deliverables will be saved in the *data/current_yr* folder where current_yr is as specified by the end user and reflects the year in which the data set is being produced. 
 
 *Check Output* 
 
 Consistency with data maintained from year to year can be of particular concern. To check for outliers and ensure consistency between years, navigate to the folder, *data/current_yr/Check Output*. Open each markdown file to compare all intermediate and final tables with the previous year.  
+
+*Data Confidentiality*
+Due to the confidentiality agreements pertaining to the NOAA data sets, this program cannot be ran without government access. For government officials, researchers, and staff, an active oracle username and password is required to run this R project. 
+
 
