@@ -16,6 +16,7 @@ The purpose of this project was to remove the reliance of contracting the data c
 Consistency with data maintained from year to year can be of particular concern. To check for outliers and ensure consistency between years, navigate to the folder, *data/current_yr/Check Output*. Open each markdown file to compare all intermediate and final tables with the previous year.  
 
 *Data Confidentiality*
+
 Due to the confidentiality agreements pertaining to the NOAA data sets, this program cannot be ran without government access. For government officials, researchers, and staff, an active oracle username and password is required to run this R project. 
 
 
