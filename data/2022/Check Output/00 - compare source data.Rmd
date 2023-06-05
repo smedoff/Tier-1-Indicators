@@ -1,0 +1,113 @@
+---
+title: "00_comparing source data"
+author: "Sarah Medoff"
+date: "December 2, 2022"
+output: html_document
+code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(dplyr)
+library(tidyverse)
+rm(list=ls())
+
+year <- 2022
+```
+
+```{r}
+source_files.v <- gsub(".RDS", "", list.files(file.path("..", "source")))
+```
+
+# Bring in all the source data
+```{r}
+last_year.l <- lapply(1:length(source_files.v), FUN = function(f){
+  readRDS(file.path("..",
+                    "..",
+                    year-1,
+                    "source",
+                    paste0(source_files.v[f], ".RDS")))})
+
+#----
+this_year.l <- lapply(1:length(source_files.v), FUN = function(f){
+  readRDS(file.path("..",
+                    "..",
+                    year,
+                    "source",
+                    paste0(source_files.v[f], ".RDS")))})
+```
+
+# Find the missing observations 
+```{r, warning=FALSE, message=FALSE}
+add_obs.l <- lapply(1:length(source_files.v), FUN = function(f){
+  
+  one_file <- source_files.v[f]
+  
+  this_year.df <- this_year.l[[f]]
+  
+  last_year.df <- last_year.l[[f]]
+  
+  add_obs.one_df <- anti_join(this_year.df, last_year.df)
+  
+  write.csv(add_obs.one_df, file.path("Additional Observations",
+                                  paste0(one_file, ".csv")))
+  
+  return(add_obs.one_df)
+  
+})
+
+names(add_obs.l) <- source_files.v
+```
+
+
+# Looking through WP_HAWAII.H_FRS 
+```{r}
+df <- add_obs.l[[2]]
+
+yr_dist.df <- data.frame(table(substr(df$FISHED_DATE, 1, 4))) %>% 
+  rename(Year = Var1,
+         Count = Freq) 
+
+ggplot(yr_dist.df, aes(Year, Count)) + 
+  geom_point() +
+  scale_x_discrete(guide = guide_axis(check.overlap = TRUE))
+
+```
+The WP_HAWAII.H_FRS data set in `r year` has `r nrow(df)` different observations than this data set in `r year-1`. 
+
+
+# Looking through WP_HAWAII.H_INTEGDEALER 
+```{r}
+df <- add_obs.l[[4]]
+
+yr_dist.df <- data.frame(table(substr(df$REPORT_DATE, 1, 4))) %>% 
+  rename(Year = Var1,
+         Count = Freq) 
+
+ggplot(yr_dist.df, aes(Year, Count)) + 
+  geom_point() +
+  scale_x_discrete(guide = guide_axis(check.overlap = TRUE))
+```
+The WP_HAWAII.H_INTEGDEALER data set in `r year` has `r nrow(df)` different observations than this data set in `r year-1`. 
+
+# Looking through WP_HAWAII_WH.FRS_SPECIES 
+```{r}
+df <- add_obs.l[[5]]
+```
+The WP_HAWAII_WH.FRS_SPECIES data set in `r year` has `r nrow(df)` different species than this data set in `r year-1`. 
+
+
+```{r}
+dealer <- read.csv(file.path("Additional Observations", "WP_HAWAII.H_INTEGDEALER.csv"))
+
+dealer_2020 <- dealer %>% 
+  filter(REPORT_DATE >= as.Date("2020-01-01") & REPORT_DATE <= as.Date("2021-12-31"))
+
+write_csv(dealer_2020, file.path("Additional Observations", "WP_HAWAII.H_INTEGDEALER_2020.csv"))
+```
+
+
