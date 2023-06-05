@@ -9,7 +9,7 @@ The purpose of this project was to remove the reliance of contracting the data c
  - Open the *Tier1_D7.Rproj*
  - Open up the *00 – Prologue.R* script and run 
  - The program will prompt the end user to input their oracle user name and password in order to query the appropriate data sets
- - All intermediate tables and final deliverables will be saved in the *data/current_yr* folder where current_yr is as specified by the end user and reflects the year in which the data set is being produced. 
+ - All intermediate tables and final deliverables will be saved in the *data/current_yr* folder where *current_yr* is as specified by the end user and reflects the year in which the data set is being produced. 
 
 *Check Output* 
 
