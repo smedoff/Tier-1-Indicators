@@ -1,0 +1,163 @@
+---
+title: "Comparing 02-Detail V7 tables"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(tidyverse)
+rm(list=ls())
+
+year <- 2021
+
+discrete_variables <- c("FISHER_LIC_FK", "TRIP_KEY", "REPORT_KEY", "VESSEL")
+
+continuous_variables <- c("FRS_NUM_KEPT", "FRS_NUM_SOLD", "FRS_NUM_LOST", "FRS_LBS_KEPT", "FRS_LBS_SOLD", "FRS_SOLD_REVENUE")
+
+
+```
+
+# Pull in data sets
+```{r}
+last_year.df <- readRDS(file.path("..",
+                                  "..",
+                                  year-1,
+                                  "intermediate",
+                                  "FRS_DEEP7_DETAILS.RDS"))
+
+this_year.df <- readRDS(file.path("..",
+                                  "intermediate",
+                                  "FRS_DEEP7_DETAILS.RDS"))
+
+
+```
+
+
+# Make sure all vars are in the new data set 
+```{r}
+  common_variables <- intersect(names(last_year.df),
+                                names(this_year.df))
+  
+  if(length(common_variables) != ncol(this_year.df)){
+    
+    if(length(setdiff(names(last_year.df), common_variables)) > 0){
+      print("These variables where in last years table but not this years")
+      setdiff(names(last_year.df), common_variables)
+    }
+    
+    if(length(setdiff(names(this_year.df), common_variables)) > 0){
+      print("These variables were in this years table not last years")
+      setdiff(names(this_year.df), common_variables)
+    }
+
+  }
+
+
+```
+
+# Make sure all seasons have the same number of observations
+```{r}
+last_SEASON <- last_year.df %>% 
+  group_by(SEASON) %>%
+  summarize(LASTYR_NUMB_OBS = n()) 
+
+this_SEASON <- this_year.df %>% 
+  group_by(SEASON) %>%
+  summarize(THISYR_NUMB_OBS = n()) 
+
+SEASON.df <- left_join(this_SEASON, last_SEASON)
+
+print("These are the seasons that experienced different observations from last year to this year")
+SEASON.df %>% 
+  mutate(DIFF_OBS = THISYR_NUMB_OBS - LASTYR_NUMB_OBS) %>% 
+  filter(DIFF_OBS != 0)
+
+graphing.df <- SEASON.df %>%
+  gather(DATA_SET, #column name summarizing old column name (key column)
+         COUNT, #column name summarizing measures (value column)
+         LASTYR_NUMB_OBS, THISYR_NUMB_OBS) #Wide to long columns in wide df
+
+
+ggplot(graphing.df, aes(SEASON, COUNT)) +
+  geom_line(aes(size = DATA_SET, color = DATA_SET, group = DATA_SET)) +
+    scale_size_manual(values = c(4, 2)) +
+  scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
+  ylab("Number of obs") + 
+  labs(title = "Number of observations in each Season")
+
+```
+
+# Comparing discrete Variables
+```{r}
+
+for(i in 1:length(discrete_variables)){
+  
+  one_var <- discrete_variables[i]
+
+  last_onevar.df <- last_year.df %>% 
+    rename(var = one_var) %>%
+    group_by(SEASON) %>%
+    summarize(LASTYR = n_distinct(var)) 
+  
+  this_onevar.df <- this_year.df %>% 
+    rename(var = one_var) %>%
+    group_by(SEASON) %>%
+    summarize(THISYR = n_distinct(var)) 
+  
+  graphing.df <- left_join(this_onevar.df, last_onevar.df) %>%
+    gather(DATA_SET, #column name summarizing old column name (key column)
+           COUNT, #column name summarizing measures (value column)
+           LASTYR, THISYR) #Wide to long columns in wide df
+  
+  
+  p <- ggplot(graphing.df, aes(SEASON, COUNT)) +
+    geom_line(aes(size = DATA_SET, color = DATA_SET, group = DATA_SET)) +
+    scale_size_manual(values = c(4, 2)) + 
+    scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
+    ylab(paste0("Number of ", one_var, " obs")) + 
+    labs(title = paste0("Number of distinct ", one_var, " in each Season"))
+
+  print(p)
+}
+
+```
+
+# Comparing Cnt Variables
+```{r}
+
+for(i in 1:length(continuous_variables)){
+  
+  one_var <- continuous_variables[i]
+  
+  last_onevar.df <- last_year.df %>% 
+    rename(var = one_var) %>%
+    group_by(SEASON) %>%
+    summarize(LASTYR = mean(var, na.rm = TRUE))
+  
+  this_onevar.df <- this_year.df %>% 
+    rename(var = one_var) %>%
+    group_by(SEASON) %>%
+    summarize(THISYR = mean(var, na.rm = TRUE)) 
+
+  
+  graphing.df <- left_join(this_onevar.df, last_onevar.df) %>%
+    gather(DATA_SET, #column name summarizing old column name (key column)
+           COUNT, #column name summarizing measures (value column)
+           LASTYR, THISYR) #Wide to long columns in wide df
+  
+  
+  p <- ggplot(graphing.df, aes(SEASON, COUNT)) +
+  geom_line(aes(size = DATA_SET, color = DATA_SET, group = DATA_SET)) +
+    scale_size_manual(values = c(4, 2)) +
+    scale_x_discrete(guide = guide_axis(check.overlap = TRUE)) +
+    ylab(paste0("Number of ", one_var, " obs")) + 
+    labs(title = paste0("Number of distinct ", one_var, " in each Season"))
+
+  print(p)
+}
+
+```
+
+
+
+
